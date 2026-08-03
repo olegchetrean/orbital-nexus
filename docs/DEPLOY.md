@@ -293,3 +293,51 @@ ssh megapromoting 'sudo tar xzf /home/ubuntu/backups/nginx-<TIMESTAMP>.tar.gz -C
 - **nginx gotcha**: `add_header` is not inherited into a block that defines its
   own `add_header` directives — that is why the security headers are repeated in
   several `location` blocks. Do not "clean that up".
+
+---
+
+## Publicare provizorie pe subcale (activ din 3 august 2026)
+
+Până propagă DNS-ul pentru subdomeniu, aplicația e publică la:
+
+**https://www.megapromoting.com/satelit/**
+
+Configurația e în `sites-enabled/darkai`, în blocul `server_name www.megapromoting.com`,
+după tiparul folosit deja de `/mds26/`, `/ugcfactory/` și `/infographAI/`:
+
+```nginx
+location ^~ /satelit/ {
+    alias /var/www/satelit/;
+    index index.html;
+    try_files $uri $uri/ /satelit/index.html;
+    add_header Cache-Control "no-cache";
+    add_header X-Content-Type-Options "nosniff";
+}
+location = /satelit { return 301 /satelit/; }
+```
+
+Slash-ul final e obligatoriu: `vite.config.ts` are `base: './'`, deci asset-urile se
+rezolvă relativ la calea curentă. Fără el, `./assets/x.js` ar cădea în rădăcina
+domeniului. De aceea există redirecționarea `/satelit` → `/satelit/`.
+
+Backup înainte de modificare: `/home/ubuntu/backups/nginx-pre-satelit-20260803-131124.tar.gz`
+
+### După ce subdomeniul devine activ
+
+Înlocuiește conținutul locației cu o redirecționare permanentă, ca linkurile deja
+distribuite să nu moară:
+
+```nginx
+location ^~ /satelit/ { return 301 https://satelit.megapromoting.com$request_uri; }
+location = /satelit  { return 301 https://satelit.megapromoting.com/; }
+```
+
+---
+
+## Temporary sub-path deployment (live since 3 August 2026)
+
+Until DNS for the subdomain propagates, the app is public at
+**https://www.megapromoting.com/satelit/** — see the Romanian section above for the
+nginx block. The trailing slash is required because `vite.config.ts` uses
+`base: './'`. Once the subdomain is live, replace the location body with a 301 to
+`https://satelit.megapromoting.com` so already-shared links keep working.
