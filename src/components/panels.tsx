@@ -183,6 +183,9 @@ export function InfoPanel({
   epochAgeDays,
   estimatedErrorKm,
   satcat,
+  footprintKm,
+  footprintOn,
+  onToggleFootprint,
   onToggleTracking,
   onShowPasses,
   onClose,
@@ -193,11 +196,14 @@ export function InfoPanel({
   epochAgeDays: number | null;
   estimatedErrorKm: number | null;
   satcat: SatcatEntry | null;
+  footprintKm: number | null;
+  footprintOn: boolean;
+  onToggleFootprint: () => void;
   onToggleTracking: () => void;
   onShowPasses?: () => void;
   onClose: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
   if (!entry) return null;
   const cat = CATEGORIES.find((c) => c.id === entry.category);
   const catLabel = cat ? t(cat.labelKey) : '';
@@ -307,7 +313,23 @@ export function InfoPanel({
               <Row k={t('raan')} v={`${telemetry.raanDeg.toFixed(2)}°`} />
             </>
           )}
+          {footprintKm !== null && (
+            <Row k={t('footprintRow')} v={t('footprintValue', { km: num(Math.round(footprintKm)) })} />
+          )}
         </div>
+
+        {/* Amprenta se poate stinge: pe glob aglomerat, cercul acoperă alte obiecte */}
+        <button
+          onClick={onToggleFootprint}
+          title={t('footprintHint')}
+          className={`mt-3 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            footprintOn
+              ? 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200'
+              : 'border-white/15 bg-white/5 text-slate-400 hover:bg-white/10'
+          }`}
+        >
+          {footprintOn ? t('footprintToggleOn') : t('footprintToggleOff')}
+        </button>
 
         {/* Proveniența datelor pentru acest obiect — fără ea, cifrele de mai sus
             sunt doar niște zecimale convingătoare. */}

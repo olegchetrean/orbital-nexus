@@ -146,6 +146,11 @@ const MODEL_SHOW_DIST = 0.05;
 
 const EARTH_RADIUS_KM = 6371;
 
+/** Segmente pe cercul amprentei — 128 e imperceptibil de poligonal și ieftin */
+const FOOTPRINT_SEGMENTS = 128;
+const FOOTPRINT_LAT = new Float32Array(FOOTPRINT_SEGMENTS);
+const FOOTPRINT_LON = new Float32Array(FOOTPRINT_SEGMENTS);
+
 /**
  * Raza cercului de vizibilitate al unui satelit, în radiani de unghi central.
  * Un observator vede satelitul deasupra elevației `elevDeg` doar în interiorul
@@ -251,6 +256,13 @@ export class GlobeEngine {
   private mapObserver: THREE.Mesh | null = null;
   private globeGroup = new THREE.Group();
 
+  // --- amprenta la sol + modelul 3D al obiectului selectat ---
+  private footprintRing!: THREE.LineLoop;
+  private footprintCap!: THREE.Mesh;
+  private mapFootprint!: THREE.LineSegments;
+  private satModel!: THREE.Group;
+  private showFootprint = true;
+
   private selectedIndex: number | null = null;
   private tracking = false;
   private visibleCategories = new Set<CategoryId>();
@@ -320,7 +332,9 @@ export class GlobeEngine {
     this.camera = new THREE.PerspectiveCamera(
       55,
       container.clientWidth / container.clientHeight,
-      0.001,
+      // plan apropiat foarte mic: fără el, la câțiva kilometri de obiect camera
+      // l-ar tăia din cadru
+      0.00002,
       500
     );
     this.camera.position.set(0, 0.6, 3.2);
@@ -382,7 +396,7 @@ export class GlobeEngine {
     this.mapControls.enableDamping = true;
     this.mapControls.dampingFactor = 0.12;
     this.mapControls.minZoom = 0.9;
-    this.mapControls.maxZoom = 60;
+    this.mapControls.maxZoom = 400;
     this.mapControls.mouseButtons = {
       LEFT: THREE.MOUSE.PAN,
       MIDDLE: THREE.MOUSE.DOLLY,
@@ -631,7 +645,239 @@ export class GlobeEngine {
     this.marker.renderOrder = 10;
     this.globeGroup.add(this.marker);
 
+    this.buildFootprint();
+    this.buildSatModel();
     this.buildMapScene(dayTex, nightTex);
+  }
+
+  /**
+   * Amprenta la sol: cercul de pe suprafață din interiorul căruia satelitul e
+   * deasupra orizontului. Se reconstruiește în fiecare cadru, dar fără alocări —
+   * scriem direct în tampoanele existente.
+   */
+  private buildFootprint() {
+    const N = FOOTPRINT_SEGMENTS;
+
+    const ringGeo = new THREE.BufferGeometry();
+    ringGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+    this.footprintRing = new THREE.LineLoop(
+      ringGeo,
+      new THREE.LineBasicMaterial({
+        color: 0x38e1ff,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
+    this.footprintRing.frustumCulled = false;
+    this.footprintRing.visible = false;
+    this.globeGroup.add(this.footprintRing);
+
+    // capacul: un evantai de triunghiuri din centrul amprentei spre inel
+    const capGeo = new THREE.BufferGeometry();
+    capGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array((N + 1) * 3), 3));
+    const idx: number[] = [];
+    for (let i = 0; i < N; i++) idx.push(0, i + 1, ((i + 1) % N) + 1);
+    capGeo.setIndex(idx);
+    this.footprintCap = new THREE.Mesh(
+      capGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x38e1ff,
+        transparent: true,
+        opacity: 0.1,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    this.footprintCap.frustumCulled = false;
+    this.footprintCap.visible = false;
+    this.footprintCap.renderOrder = 3;
+    this.globeGroup.add(this.footprintCap);
+
+    // varianta de hartă: segmente, ca să se poată rupe la meridianul 180°
+    const mapGeo = new THREE.BufferGeometry();
+    mapGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3));
+    this.mapFootprint = new THREE.LineSegments(
+      mapGeo,
+      new THREE.LineBasicMaterial({
+        color: 0x38e1ff,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
+    this.mapFootprint.frustumCulled = false;
+    this.mapFootprint.visible = false;
+    this.mapGroup.add(this.mapFootprint);
+  }
+
+  /**
+   * Model 3D simplu al unui satelit — corp, panouri solare, antenă.
+   * Apare doar la apropiere maximă; de la distanță, pictograma plată e mai lizibilă
+   * și infinit mai ieftină pentru 12.000 de obiecte.
+   */
+  private buildSatModel() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 0.9, 1.4),
+      new THREE.MeshBasicMaterial({ color: 0xd8e4ff })
+    );
+    g.add(body);
+
+    const panelMat = new THREE.MeshBasicMaterial({ color: 0x2a4a86 });
+    const frameMat = new THREE.MeshBasicMaterial({ color: 0x8fb0e8 });
+    for (const dir of [-1, 1]) {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.05, 1.1), panelMat);
+      panel.position.x = dir * 2.1;
+      g.add(panel);
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.08, 0.06), frameMat);
+      frame.position.x = dir * 2.1;
+      g.add(frame);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.09, 0.09), frameMat);
+      arm.position.x = dir * 1.0;
+      g.add(arm);
+    }
+    const dish = new THREE.Mesh(
+      new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+    );
+    dish.rotation.x = Math.PI;
+    dish.position.y = -0.6;
+    g.add(dish);
+
+    g.visible = false;
+    this.satModel = g;
+    this.globeGroup.add(g);
+  }
+
+  setFootprintVisible(v: boolean) {
+    this.showFootprint = v;
+    if (!v) {
+      this.footprintRing.visible = false;
+      this.footprintCap.visible = false;
+      this.mapFootprint.visible = false;
+    }
+  }
+
+  /** Recalculează amprenta pentru obiectul selectat, în ambele proiecții */
+  private updateFootprint() {
+    const store = this.store;
+    const i = this.selectedIndex;
+    if (!this.showFootprint || !store || i === null || !store.valid[i]) {
+      this.footprintRing.visible = false;
+      this.footprintCap.visible = false;
+      this.mapFootprint.visible = false;
+      return;
+    }
+
+    const N = FOOTPRINT_SEGMENTS;
+    const lambda = footprintAngleRad(store.geoAlt[i], 0);
+
+    // direcția spre punctul de sub satelit + o bază ortonormată în jurul ei
+    const n = this.tmpDir.set(
+      this.renderPos[i * 3],
+      this.renderPos[i * 3 + 1],
+      this.renderPos[i * 3 + 2]
+    );
+    if (n.lengthSq() < 1e-9) return;
+    n.normalize();
+    const u = this.tmpDir2.set(0, 1, 0);
+    if (Math.abs(n.dot(u)) > 0.95) u.set(1, 0, 0);
+    u.crossVectors(n, u).normalize();
+    const v = this.tmpDelta.crossVectors(n, u);
+
+    const R = 1.004;
+    const ring = (this.footprintRing.geometry.getAttribute('position') as THREE.BufferAttribute)
+      .array as Float32Array;
+    const cap = (this.footprintCap.geometry.getAttribute('position') as THREE.BufferAttribute)
+      .array as Float32Array;
+    const mapArr = (this.mapFootprint.geometry.getAttribute('position') as THREE.BufferAttribute)
+      .array as Float32Array;
+
+    // centrul capacului
+    cap[0] = n.x * 1.002;
+    cap[1] = n.y * 1.002;
+    cap[2] = n.z * 1.002;
+
+    const cosL = Math.cos(lambda);
+    const sinL = Math.sin(lambda);
+    const lats = FOOTPRINT_LAT;
+    const lons = FOOTPRINT_LON;
+
+    for (let k = 0; k < N; k++) {
+      const a = (k / N) * Math.PI * 2;
+      const ca = Math.cos(a) * sinL;
+      const sa = Math.sin(a) * sinL;
+      const x = n.x * cosL + u.x * ca + v.x * sa;
+      const y = n.y * cosL + u.y * ca + v.y * sa;
+      const z = n.z * cosL + u.z * ca + v.z * sa;
+      ring[k * 3] = x * R;
+      ring[k * 3 + 1] = y * R;
+      ring[k * 3 + 2] = z * R;
+      cap[(k + 1) * 3] = x * 1.003;
+      cap[(k + 1) * 3 + 1] = y * 1.003;
+      cap[(k + 1) * 3 + 2] = z * 1.003;
+
+      lats[k] = 90 - (Math.acos(Math.min(1, Math.max(-1, y))) * 180) / Math.PI;
+      const lon = (Math.atan2(z, -x) * 180) / Math.PI - 180;
+      lons[k] = ((((lon + 180) % 360) + 360) % 360) - 180;
+    }
+
+    this.footprintRing.geometry.attributes.position.needsUpdate = true;
+    this.footprintCap.geometry.attributes.position.needsUpdate = true;
+    this.footprintRing.visible = !this.mapMode;
+    this.footprintCap.visible = !this.mapMode;
+
+    // proiecția pe hartă, ruptă acolo unde cercul traversează antimeridianul
+    let seg = 0;
+    for (let k = 0; k < N; k++) {
+      const k2 = (k + 1) % N;
+      if (Math.abs(lons[k2] - lons[k]) > 180) continue;
+      for (const j of [k, k2]) {
+        mapArr[seg * 3] = (lons[j] / 180) * (MAP_W / 2);
+        mapArr[seg * 3 + 1] = (lats[j] / 90) * (MAP_H / 2);
+        mapArr[seg * 3 + 2] = 0.006;
+        seg++;
+      }
+    }
+    for (let s = seg; s < N * 2; s++) {
+      // segmentele rămase se colapsează într-un punct, ca să nu deseneze linii false
+      mapArr[s * 3] = mapArr[0];
+      mapArr[s * 3 + 1] = mapArr[1];
+      mapArr[s * 3 + 2] = 0.006;
+    }
+    this.mapFootprint.geometry.attributes.position.needsUpdate = true;
+    this.mapFootprint.visible = this.mapMode;
+  }
+
+  /** Modelul 3D apare doar când camera e aproape; altfel rămâne pictograma */
+  private updateSatModel() {
+    const store = this.store;
+    const i = this.selectedIndex;
+    if (this.mapMode || !store || i === null || !store.valid[i]) {
+      this.satModel.visible = false;
+      return;
+    }
+    const p = this.tmpTgt.set(
+      this.renderPos[i * 3],
+      this.renderPos[i * 3 + 1],
+      this.renderPos[i * 3 + 2]
+    );
+    const dist = this.camera.position.distanceTo(p);
+    if (dist > MODEL_SHOW_DIST) {
+      this.satModel.visible = false;
+      return;
+    }
+    this.satModel.visible = true;
+    this.satModel.position.copy(p);
+    // dimensiune constantă pe ecran, ca să nu explodeze la apropiere maximă
+    this.satModel.scale.setScalar(Math.max(dist * 0.055, 2e-5));
+    // corpul „privește" spre Pământ, panourile rămân perpendiculare pe direcția de mers
+    this.satModel.up.set(this.velDir[i * 4], this.velDir[i * 4 + 1], this.velDir[i * 4 + 2]);
+    this.satModel.lookAt(0, 0, 0);
   }
 
   setStore(store: SatStore) {
@@ -885,6 +1131,12 @@ export class GlobeEngine {
       this.disposeGroundTrack();
       this.disposeMapTrack();
       if (this.mapMarker) this.mapMarker.visible = false;
+      if (this.satModel) this.satModel.visible = false;
+      if (this.footprintRing) {
+        this.footprintRing.visible = false;
+        this.footprintCap.visible = false;
+        this.mapFootprint.visible = false;
+      }
       // ne întoarcem la glob doar dacă chiar veneam de la un obiect selectat
       if (had && !this.mapMode) this.focusHome();
     } else if (this.store) {
@@ -1074,6 +1326,7 @@ export class GlobeEngine {
             this.rebuildMapTrack(simTime);
             this.lastOrbitRebuild = performance.now();
           }
+          this.updateFootprint();
           if (this.tracking) this.centerMapOn(this.selectedIndex, false, true);
         } else {
           this.mapMarker.visible = false;
@@ -1118,6 +1371,8 @@ export class GlobeEngine {
           this.rebuildGroundTrack(simTime);
           this.lastOrbitRebuild = performance.now();
         }
+        this.updateFootprint();
+        this.updateSatModel();
         // punctul de la sol urmărește satelitul între reconstrucții
         if (this.groundDot) {
           this.groundDot.position.copy(this.tmpV).setLength(1.004);

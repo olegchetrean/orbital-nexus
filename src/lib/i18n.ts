@@ -75,6 +75,14 @@ const DICT = {
   apogeePerigee: { ro: 'Apogeu / Perigeu', en: 'Apogee / Perigee' },
   raan: { ro: 'RAAN', en: 'RAAN' },
 
+  footprintRow: { ro: 'Zona de vizibilitate', en: 'Visibility footprint' },
+  footprintValue: { ro: 'rază {km} km', en: '{km} km radius' },
+  footprintToggleOn: { ro: '◉ Zona de vizibilitate', en: '◉ Visibility footprint' },
+  footprintToggleOff: { ro: '◎ Zona de vizibilitate', en: '◎ Visibility footprint' },
+  footprintHint: {
+    ro: 'Cercul de pe Pământ din interiorul căruia satelitul e deasupra orizontului chiar acum.',
+    en: 'The circle on Earth from which the satellite is above the horizon right now.',
+  },
   provenanceTitle: { ro: 'Proveniența datelor', en: 'Data provenance' },
   operatorEphemeris: { ro: 'efemeride operator', en: 'operator ephemeris' },
   publicCatalog: { ro: 'catalog public', en: 'public catalogue' },

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Routes, Route } from 'react-router';
 import * as THREE from 'three';
-import { GlobeEngine } from './three/engine';
+import { GlobeEngine, footprintRadiusKm } from './three/engine';
 import { SatStore, loadSatellites, computeStarlinkShells } from './lib/data';
 import { OrbitWorkerClient } from './lib/orbitWorker';
 import { lookAngles, isSunlit, sunElevation, sunDirection } from './lib/astro';
@@ -189,6 +189,7 @@ function OrbitalNexus() {
   const [viewMode, setViewMode] = useState<'globe' | 'map'>('globe');
   const [satcat, setSatcat] = useState<Map<number, SatcatEntry> | null>(null);
   const [offsetMs, setOffsetMs] = useState(0);
+  const [footprintOn, setFootprintOn] = useState(true);
 
   // --- Densitate altitudine ---
   const [showAltitude, setShowAltitude] = useState(false);
@@ -405,6 +406,10 @@ function OrbitalNexus() {
   // --- ceas afișat + decalajul față de timpul real ---
   useEffect(() => {
     const id = setInterval(() => {
+      // La 1× ceasul se resincronizează și aici, nu doar în bucla de randare:
+      // când fila e în fundal browserul oprește cadrele, iar la revenire
+      // indicatorul ar arăta câteva secunde fals „nu ești pe LIVE".
+      if (!pausedRef.current && speedRef.current === 1) simMsRef.current = Date.now();
       setClock(new Date(simMsRef.current));
       setOffsetMs(simMsRef.current - Date.now());
     }, 250);
@@ -609,7 +614,7 @@ function OrbitalNexus() {
       setPasses(result);
       setPassesLoading(false);
     },
-    [obsLoc, selected]
+    [obsLoc, selected, t, num]
   );
 
   const handleGoToPass = useCallback((p: SatellitePass) => {
@@ -856,6 +861,14 @@ function OrbitalNexus() {
                 epochAgeDays={storeRef.current?.epochAgeDays[selected] ?? null}
                 estimatedErrorKm={storeRef.current?.estimatedErrorKm(selected) ?? null}
                 satcat={satcat?.get(entries[selected].noradId) ?? null}
+                footprintKm={telemetry ? footprintRadiusKm(telemetry.altKm) : null}
+                footprintOn={footprintOn}
+                onToggleFootprint={() => {
+                  setFootprintOn((v) => {
+                    engineRef.current?.setFootprintVisible(!v);
+                    return !v;
+                  });
+                }}
                 onToggleTracking={() => setTracking((t) => !t)}
                 onShowPasses={() => runPasses('selected')}
                 onClose={() => {
