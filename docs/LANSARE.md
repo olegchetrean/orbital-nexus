@@ -140,7 +140,7 @@ Asta e harta: https://www.megapromoting.com/satelit/
 
 Se numește Orbital Nexus. Se deschide în browser, fără cont și fără instalare. Are 11.894 de obiecte, propagate chiar în browserul tău.
 
-Dar partea la care țin cel mai mult e alta: ridici telefonul spre cer și platforma îți arată exact ce trece pe deasupra ta. Se mișcă odată cu tine, are stelele și constelațiile reale ca reper, iar dacă alegi un satelit anume îți spune încotro să te întorci și cu cât să ridici telefonul. Ca să nu mai stai să ghicești care punct care e.
+Dar partea la care țin cel mai mult e alta: ridici telefonul spre cer și platforma îți arată ce trece pe deasupra ta. Se mișcă odată cu tine, are stelele și constelațiile reale ca reper, iar dacă alegi un satelit anume îți spune încotro să te întorci și cu cât să ridici telefonul. Ca să nu mai stai să ghicești care punct care e.
 
 Îți spune și ce treceri se văd cu ochiul liber la noapte, la ce oră și în ce parte a cerului.
 
@@ -158,7 +158,7 @@ Codul e aici, dacă vrea cineva să se uite: https://github.com/olegchetrean/orb
 ### Varianta engleză
 
 ```
-I have been into space for a long time.
+Space has fascinated me for as long as I can remember.
 
 A few evenings ago I was outside with @Lilia Chetrean, watching satellites go over. They came one after another, in lines. I explained how they link to each other with lasers, how they form a kind of net across the planet.
 
@@ -168,7 +168,7 @@ Here is the map: https://www.megapromoting.com/satelit/
 
 It is called Orbital Nexus. It opens in a browser, no account, no install. 11,894 objects, propagated in your own browser.
 
-But the part I care about most is this: you hold your phone up to the sky and it shows you exactly what is passing over you. It moves as you move, with the real stars and constellations as your reference, and if you pick a particular satellite it tells you which way to turn and how far to raise the phone. So you stop guessing which dot is which.
+But the part I care about most is this: you hold your phone up to the sky and it shows you what is passing over you. It moves as you move, with the real stars and constellations as your reference, and if you pick a particular satellite it tells you which way to turn and how far to raise the phone. So you stop guessing which dot is which.
 
 It also tells you which passes are visible to the naked eye tonight, at what time and where in the sky to look.
 
