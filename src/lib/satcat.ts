@@ -167,7 +167,9 @@ export function loadSatcat(): Promise<Map<number, SatcatEntry>> {
       return parse(cached.text);
     }
     try {
-      const res = await fetch(SATCAT_URL);
+      // 6,7 MB, deci un termen mai generos decât la elementele orbitale — dar tot
+      // un termen: o cerere care nu răspunde niciodată ține referința vie degeaba
+      const res = await fetch(SATCAT_URL, { signal: AbortSignal.timeout(45_000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       if (text.length < 1000) throw new Error('răspuns prea scurt');

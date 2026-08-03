@@ -33,6 +33,7 @@ import {
   type HoverInfo,
   type VisibleSat,
 } from './components/panels';
+import { SkyView } from './components/SkyView';
 import { loadSatcat, type SatcatEntry } from './lib/satcat';
 import { I18nContext, detectLang, makeTranslator, useI18n, type Lang } from './lib/i18n';
 
@@ -137,6 +138,13 @@ function computeObserver(store: SatStore, lat: number, lon: number, simTime: Dat
  */
 const MAX_PASS_CANDIDATES = 1200;
 
+/** Cele trei puncte de vedere asupra acelorași date */
+const VIEWS = [
+  { id: 'globe', icon: '◍', label: 'viewGlobe', title: 'viewGlobeTitle' },
+  { id: 'map', icon: '▭', label: 'viewMap', title: 'viewMapTitle' },
+  { id: 'sky', icon: '◠', label: 'viewSky', title: 'viewSkyTitle' },
+] as const;
+
 function passCandidates(store: SatStore): { indices: number[]; total: number; dropped: number } {
   const indices: number[] = [];
   for (let i = 0; i < store.size; i++) {
@@ -186,7 +194,7 @@ function OrbitalNexus() {
   const [showSources, setShowSources] = useState(false);
   const [mobileFilters, setMobileFilters] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
-  const [viewMode, setViewMode] = useState<'globe' | 'map'>('globe');
+  const [viewMode, setViewMode] = useState<'globe' | 'map' | 'sky'>('globe');
   const [satcat, setSatcat] = useState<Map<number, SatcatEntry> | null>(null);
   const [offsetMs, setOffsetMs] = useState(0);
   const [footprintOn, setFootprintOn] = useState(true);
@@ -287,6 +295,8 @@ function OrbitalNexus() {
         engine,
         worker,
         store: () => storeRef.current,
+        /** ceasul simulării, scriitor — unelte de captură video îl avansează singure */
+        simMs: simMsRef,
         stats: () => {
           const s = storeRef.current;
           if (!s) return { store: null };
@@ -565,7 +575,7 @@ function OrbitalNexus() {
     setPaused(false);
   };
 
-  const useGpsLocation = () => {
+  const locateObserver = () => {
     setObsLocating(true);
     setObsError(null);
     navigator.geolocation.getCurrentPosition(
@@ -579,6 +589,23 @@ function OrbitalNexus() {
       },
       { timeout: 10000 }
     );
+  };
+
+  /**
+   * Comutarea între cele trei puncte de vedere. Modul Cer acoperă complet
+   * globul, deci oprim randarea WebGL — dar nu și propagarea, ca la întoarcere
+   * scena să fie deja la zi.
+   */
+  const handleViewMode = (m: 'globe' | 'map' | 'sky') => {
+    setViewMode(m);
+    const engine = engineRef.current;
+    if (m === 'sky') {
+      engine?.setRenderEnabled(false);
+      if (!obsLoc) locateObserver();
+    } else {
+      engine?.setRenderEnabled(true);
+      engine?.setViewMode(m);
+    }
   };
 
   /* ---------------- Treceri ---------------- */
@@ -665,7 +692,23 @@ function OrbitalNexus() {
 
       {loading && <LoadingScreen done={progress.done} total={progress.total} source={progress.source} />}
 
-      <HoverTooltip hover={hover} />
+      {viewMode === 'sky' && !loading && (
+        <SkyView
+          store={storeRef.current}
+          observer={obsLoc}
+          simTimeRef={simMsRef}
+          selected={selected}
+          visibleCats={visibleCats}
+          onSelect={(i) => {
+            setSelected(i);
+            engineRef.current?.select(i);
+          }}
+          onNeedLocation={locateObserver}
+          onClose={() => handleViewMode('globe')}
+        />
+      )}
+
+      {viewMode !== 'sky' && <HoverTooltip hover={hover} />}
 
       {!loading && (
         <>
@@ -687,22 +730,19 @@ function OrbitalNexus() {
               ☰
             </button>
 
-            {/* Glob sau hartă — aceleași date, două proiecții */}
+            {/* Glob, hartă sau cer — aceleași date, trei puncte de vedere */}
             <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black/50 backdrop-blur-md">
-              {(['globe', 'map'] as const).map((m) => (
+              {VIEWS.map(({ id, icon, label, title }) => (
                 <button
-                  key={m}
-                  onClick={() => {
-                    setViewMode(m);
-                    engineRef.current?.setViewMode(m);
-                  }}
+                  key={id}
+                  onClick={() => handleViewMode(id)}
                   className={`shrink-0 px-2.5 py-2 text-xs whitespace-nowrap transition-colors ${
-                    viewMode === m ? 'bg-cyan-500/25 text-cyan-200' : 'text-slate-400 hover:bg-white/10'
+                    viewMode === id ? 'bg-cyan-500/25 text-cyan-200' : 'text-slate-400 hover:bg-white/10'
                   }`}
-                  title={m === 'globe' ? t('viewGlobeTitle') : t('viewMapTitle')}
+                  title={t(title)}
                 >
-                  {m === 'globe' ? '◍' : '▭'}
-                  <span className="ml-1 hidden md:inline">{m === 'globe' ? t('viewGlobe') : t('viewMap')}</span>
+                  {icon}
+                  <span className="ml-1 hidden md:inline">{t(label)}</span>
                 </button>
               ))}
             </div>
@@ -723,7 +763,7 @@ function OrbitalNexus() {
           <div
             className={`absolute top-20 left-3 z-30 max-h-[72dvh] w-56 overflow-y-auto pb-4 sm:top-24 sm:left-4 lg:z-20 ${
               mobileFilters ? 'block' : 'hidden'
-            } lg:block`}
+            } ${viewMode === 'sky' ? 'lg:hidden' : 'lg:block'}`}
           >
             <div className="mb-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
               {t('filtersTitle')}
@@ -788,7 +828,7 @@ function OrbitalNexus() {
             className={`absolute z-20 flex flex-col gap-3 overflow-y-auto
               inset-x-2 bottom-28 max-h-[58dvh]
               sm:inset-x-auto sm:top-24 sm:right-4 sm:bottom-auto sm:max-h-[calc(100dvh-11rem)]
-              ${anyPanelOpen ? '' : 'pointer-events-none'}`}
+              ${anyPanelOpen ? '' : 'pointer-events-none'} ${viewMode === 'sky' ? 'hidden' : ''}`}
           >
             {showSources && (
               <SourcePanel
@@ -855,7 +895,7 @@ function OrbitalNexus() {
                 nakedCount={obsResult?.nakedCount ?? 0}
                 visible={obsResult?.list ?? []}
                 passesLoading={passesLoading}
-                onUseLocation={useGpsLocation}
+                onUseLocation={locateObserver}
                 onManual={(lat, lon) => setObsLoc({ lat, lon })}
                 onComputePasses={() => runPasses('night')}
                 onClose={() => setShowObserver(false)}
@@ -879,6 +919,7 @@ function OrbitalNexus() {
                 }}
                 onToggleTracking={() => setTracking((t) => !t)}
                 onShowPasses={() => runPasses('selected')}
+                onFindInSky={() => handleViewMode('sky')}
                 onClose={() => {
                   setSelected(null);
                   engineRef.current?.select(null);
@@ -890,7 +931,11 @@ function OrbitalNexus() {
 
           {/* Bara de jos: statistici + control timp + ajutor, într-un singur rând
               care nu se poate suprapune pe sine indiferent de lățime */}
-          <div className="absolute inset-x-0 bottom-0 z-20 flex flex-wrap items-end justify-center gap-2 p-3 sm:justify-between sm:p-4">
+          <div
+            className={`absolute inset-x-0 bottom-0 z-20 flex-wrap items-end justify-center gap-2 p-3 sm:justify-between sm:p-4 ${
+              viewMode === 'sky' ? 'hidden' : 'flex'
+            }`}
+          >
             <StatsBar
               total={entries.length}
               source={source}

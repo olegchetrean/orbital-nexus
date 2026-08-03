@@ -117,7 +117,15 @@ interface GroupOutcome {
  * clientul are deja versiunea curentă. Este echivalentul unui `304 Not Modified`,
  * nu o eroare. Tratat ca eroare, aplicația arunca date perfect valide și cădea
  * pe setul de rezervă înghețat în cod.
+ *
+ * A doua subtilitate: o cerere fără termen nu eșuează niciodată. Când CelesTrak
+ * limitează un IP, conexiunea nu e refuzată — pur și simplu nu răspunde. Fără
+ * `REQUEST_TIMEOUT_MS`, promisiunea rămâne suspendată, `allSettled` nu se
+ * încheie, iar ecranul de încărcare rămâne pe loc la nesfârșit. O eroare
+ * declarată la timp ne lasă să cădem pe cache sau pe setul de rezervă.
  */
+const REQUEST_TIMEOUT_MS = 12_000;
+
 async function fetchGroup(def: GroupDef, force: boolean): Promise<GroupOutcome> {
   const cached = await cacheGet(def.key);
   const fresh = cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS;
@@ -127,7 +135,10 @@ async function fetchGroup(def: GroupDef, force: boolean): Promise<GroupOutcome> 
   }
 
   try {
-    const res = await fetch(def.url, { cache: 'no-store' });
+    const res = await fetch(def.url, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
     const body = await res.text();
 
     if (res.ok && body.length > 100) {

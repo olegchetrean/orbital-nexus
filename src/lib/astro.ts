@@ -28,10 +28,13 @@ export function sunDirection(date: Date, out: THREE.Vector3): THREE.Vector3 {
   const ra = Math.atan2(Math.cos(e) * Math.sin(Lrad), Math.cos(Lrad)); // ascensie dreaptă (rad)
   const decl = Math.asin(Math.sin(e) * Math.sin(Lrad)); // declinație (rad)
 
-  // GMST (ore)
+  // GMST (ore) — ascensia dreaptă a meridianului Greenwich
   const gmstHours = (((18.697374558 + 24.06570982441908 * d) % 24) + 24) % 24;
   const gmstDeg = gmstHours * 15;
-  let subLon = gmstDeg - (ra * 180) / Math.PI; // longitudinea punctului sub-solar
+  // Un obiect cu ascensia dreaptă α trece peste longitudinea α − GMST. Scăderea
+  // inversă întorcea punctul sub-solar în oglindă față de meridianul Greenwich,
+  // deci și terminatorul zi/noapte, și testul „e întuneric la observator".
+  let subLon = (ra * 180) / Math.PI - gmstDeg; // longitudinea punctului sub-solar
   subLon = ((((subLon + 180) % 360) + 360) % 360) - 180;
 
   return latLonToVec3((decl * 180) / Math.PI, subLon, 1, out).normalize();
