@@ -312,6 +312,12 @@ function OrbitalNexus() {
       if (idx !== null) engine.focusOn(idx);
     };
 
+    // click pe Pământ = mută observatorul acolo, cât timp panoul e deschis
+    engine.onPickLocation = (lat, lon) => {
+      setObsLoc({ lat, lon });
+      setObsError(null);
+    };
+
     engine.onHover = (hit) => {
       const store = storeRef.current;
       if (!hit || !store) {
@@ -502,6 +508,8 @@ function OrbitalNexus() {
     const engine = engineRef.current;
     if (showObserver && obsLoc) engine?.showObserver(obsLoc.lat, obsLoc.lon);
     else engine?.showObserver(null);
+    // cursorul devine cruce cât timp un click pe glob/hartă mută observatorul
+    engine?.setLocationPickMode(showObserver);
   }, [showObserver, obsLoc]);
 
   // --- contor bandă altitudine ---

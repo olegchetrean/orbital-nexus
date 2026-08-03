@@ -155,6 +155,10 @@ const DICT = {
     ro: 'Locația nu a putut fi determinată. Introdu coordonate manual.',
     en: 'Could not determine your location. Enter coordinates manually.',
   },
+  clickToPlace: {
+    ro: 'sau dă click direct pe glob / hartă',
+    en: 'or click straight on the globe / map',
+  },
   pickLocationFirst: { ro: 'Alege întâi o locație de observare.', en: 'Pick an observing location first.' },
   propagatingCatalog: { ro: 'Se propagă catalogul…', en: 'Propagating the catalogue…' },
   propagatingHint: {

@@ -878,6 +878,7 @@ export function ObserverPanel({
               </button>
             ))}
           </div>
+          <div className="text-center text-[10px] text-slate-500">{t('clickToPlace')}</div>
           {error && <div className="text-[10px] text-red-400">{error}</div>}
         </div>
       )}

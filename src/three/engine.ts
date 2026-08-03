@@ -316,11 +316,24 @@ export class GlobeEngine {
   private tmpDelta = new THREE.Vector3();
   private tmpQ = new THREE.Quaternion();
   private tmpQ2 = new THREE.Quaternion();
+  private tmpVec2 = new THREE.Vector2();
+  private raycaster = new THREE.Raycaster();
+  /** sfera Pământului, pentru a afla pe ce punct de pe glob s-a dat click */
+  private earthSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1);
   private sun = new THREE.Vector3(1, 0, 0);
 
   onPick: ((index: number | null) => void) | null = null;
   /** Obiectul de sub cursor, cu poziția lui pe ecran — pentru tooltip */
   onHover: ((hit: { index: number; x: number; y: number } | null) => void) | null = null;
+  /** Punctul geografic pe care s-a dat click, când nu s-a nimerit niciun satelit */
+  onPickLocation: ((lat: number, lon: number) => void) | null = null;
+  /** cât timp e activ, un click pe Pământ mută observatorul în loc să deselecteze */
+  private locationPickMode = false;
+
+  setLocationPickMode(on: boolean) {
+    this.locationPickMode = on;
+    this.renderer.domElement.style.cursor = on ? 'crosshair' : '';
+  }
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -1597,11 +1610,57 @@ export class GlobeEngine {
     this.onHover?.(null);
   };
 
+  /**
+   * Punctul de pe suprafața Pământului aflat sub cursor.
+   * Pe glob e o intersecție rază–sferă; pe harta plată, o simplă dezproiecție,
+   * pentru că proiecția echirectangulară e liniară în latitudine și longitudine.
+   */
+  private geoUnderCursor(clientX: number, clientY: number): { lat: number; lon: number } | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const mx = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const my = -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+    if (this.mapMode) {
+      this.tmpTgt.set(mx, my, 0).unproject(this.mapCamera);
+      const lon = (this.tmpTgt.x / (MAP_W / 2)) * 180;
+      const lat = (this.tmpTgt.y / (MAP_H / 2)) * 90;
+      if (Math.abs(lon) > 180 || Math.abs(lat) > 90) return null; // în afara hărții
+      return { lat, lon };
+    }
+
+    this.raycaster.setFromCamera(this.tmpVec2.set(mx, my), this.camera);
+    const hit = this.raycaster.ray.intersectSphere(this.earthSphere, this.tmpTgt);
+    if (!hit) return null; // clic pe cer, lângă glob
+    const r = hit.length() || 1;
+    const lat = 90 - (Math.acos(Math.min(1, Math.max(-1, hit.y / r))) * 180) / Math.PI;
+    let lon = (Math.atan2(hit.z, -hit.x) * 180) / Math.PI - 180;
+    lon = ((((lon + 180) % 360) + 360) % 360) - 180;
+    return { lat, lon };
+  }
+
   private handleClick = (ev: PointerEvent) => {
     if (!this.store || !this.onPick) return;
     if (Math.hypot(ev.clientX - this.downX, ev.clientY - this.downY) > 5) return;
-    const best = this.pickAt(ev.clientX, ev.clientY, 22);
-    this.onPick(best >= 0 ? best : null);
+
+    // Cât timp alegi locul de observare, raza de prindere a sateliților scade:
+    // cu ~12.000 de obiecte pe ecran, o rază de 22 px nimerește mereu ceva și
+    // pinul n-ar ajunge niciodată pe hartă. La 7 px trebuie să nimerești
+    // pictograma, altfel clicul e pentru locație.
+    const best = this.pickAt(ev.clientX, ev.clientY, this.locationPickMode ? 7 : 22);
+    if (best >= 0) {
+      this.onPick(best);
+      return;
+    }
+
+    // niciun satelit sub cursor: în modul de alegere a locului, mutăm observatorul
+    if (this.locationPickMode && this.onPickLocation) {
+      const geo = this.geoUnderCursor(ev.clientX, ev.clientY);
+      if (geo) {
+        this.onPickLocation(geo.lat, geo.lon);
+        return;
+      }
+    }
+    this.onPick(null);
   };
 
   private handleResize = () => {
