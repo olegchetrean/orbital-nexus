@@ -69,7 +69,7 @@ void main() {
   if (perspective > 0.5) {
     // plafon generos: la apropiere maximă pictograma trebuie să crească vizibil,
     // altfel „zoom-ul" pe un obiect se oprește într-un punct de 30 px
-    gl_PointSize = min(size * (5.0 / -mvPosition.z), 160.0);
+    gl_PointSize = min(size * (5.0 / -mvPosition.z), 44.0);
   } else {
     // pe hartă nu există adâncime: mărimea vine din zoom
     gl_PointSize = clamp(size * orthoScale, 2.0, 26.0);
@@ -341,10 +341,14 @@ export class GlobeEngine {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.minDistance = 1.05;
+    this.controls.dampingFactor = 0.12;
+    this.controls.minDistance = EARTH_MIN_DIST;
     this.controls.maxDistance = 60;
-    this.controls.rotateSpeed = 0.5;
+    this.controls.rotateSpeed = 0.42;
+    // Zoom-ul îl facem noi: OrbitControls avansează cu un pas aproape constant per
+    // eveniment, iar de la 60 de raze terestre până la 5 km de un satelit sunt
+    // aproape cinci ordine de mărime — pe trackpad ar însemna mii de gesturi.
+    this.controls.enableZoom = false;
 
     this.buildScene();
     window.addEventListener('resize', this.handleResize);
@@ -352,6 +356,8 @@ export class GlobeEngine {
     this.renderer.domElement.addEventListener('pointerup', this.handleClick);
     this.renderer.domElement.addEventListener('pointermove', this.handlePointerMove);
     this.renderer.domElement.addEventListener('pointerleave', this.handlePointerLeave);
+    // passive:false — altfel browserul ignoră preventDefault și pagina face scroll
+    this.renderer.domElement.addEventListener('wheel', this.handleWheel, { passive: false });
   }
 
   /** Harta plată: același Pământ, aceleași date, altă proiecție */
@@ -403,6 +409,8 @@ export class GlobeEngine {
       RIGHT: THREE.MOUSE.PAN,
     };
     this.mapControls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+    this.mapControls.enableZoom = false; // ca pe glob, zoom-ul e al nostru
+    this.mapControls.enableZoom = false; // la fel ca pe glob, zoom-ul e al nostru
     this.mapControls.enabled = false;
 
     this.mapGroup.visible = false;
@@ -867,9 +875,20 @@ export class GlobeEngine {
       this.renderPos[i * 3 + 2]
     );
     const dist = this.camera.position.distanceTo(p);
+    const alphaAttr = this.satGeo.getAttribute('alpha') as THREE.BufferAttribute;
     if (dist > MODEL_SHOW_DIST) {
+      if (!this.satModel.visible) return;
       this.satModel.visible = false;
+      // pictograma plată revine când ne depărtăm
+      alphaAttr.setX(i, this.visibleCategories.has(store.entries[i].category) ? 0.95 : 0);
+      alphaAttr.needsUpdate = true;
       return;
+    }
+    // Pictograma plată crește cu apropierea și ar acoperi complet modelul —
+    // o stingem cât timp se vede obiectul propriu-zis.
+    if (alphaAttr.getX(i) !== 0) {
+      alphaAttr.setX(i, 0);
+      alphaAttr.needsUpdate = true;
     }
     this.satModel.visible = true;
     this.satModel.position.copy(p);
@@ -1373,9 +1392,13 @@ export class GlobeEngine {
         }
         this.updateFootprint();
         this.updateSatModel();
-        // punctul de la sol urmărește satelitul între reconstrucții
+        // punctul de la sol urmărește satelitul între reconstrucții. Raza lui
+        // fixă (0,006 raze = 38 km) e potrivită pentru vederea globală, dar
+        // devine o pată enormă la apropiere — deci o scalăm cu distanța camerei.
         if (this.groundDot) {
           this.groundDot.position.copy(this.tmpV).setLength(1.004);
+          const camDist = this.camera.position.distanceTo(this.groundDot.position);
+          this.groundDot.scale.setScalar(Math.min(1, Math.max(0.06, camDist * 0.5)));
         }
       } else {
         this.marker.visible = false;
@@ -1504,6 +1527,70 @@ export class GlobeEngine {
     this.onHover({ index: hit, x: ev.clientX, y: ev.clientY });
   };
 
+  /**
+   * Zoom gândit pentru trackpad-ul de MacBook.
+   *
+   * Trei decizii care contează:
+   *  — pasul e EXPONENȚIAL în deltaY, deci o singură mișcare fluidă traversează
+   *    un ordin de mărime; altfel drumul glob → satelit ar cere mii de gesturi;
+   *  — macOS trimite pinch-ul ca `wheel` cu `ctrlKey`, cu amplitudini complet
+   *    diferite de scroll-ul cu două degete, deci fiecare are constanta lui;
+   *  — apropierea merge SPRE cursor, nu spre centrul ecranului. Fără asta,
+   *    obiectul pe care vrei să-l vezi fuge din cadru pe măsură ce te apropii.
+   */
+  private handleWheel = (ev: WheelEvent) => {
+    ev.preventDefault();
+    const pinch = ev.ctrlKey; // gest de pinch pe trackpad, nu tasta Control
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const mx = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+    const my = -(((ev.clientY - rect.top) / rect.height) * 2 - 1);
+
+    if (this.mapMode) {
+      const cam = this.mapCamera;
+      const factor = Math.exp(-ev.deltaY * (pinch ? 0.011 : 0.0032));
+      const next = Math.min(Math.max(cam.zoom * factor, this.mapControls.minZoom), this.mapControls.maxZoom);
+      if (next === cam.zoom) return;
+
+      // punctul de sub cursor rămâne pe loc: mutăm ținta cu diferența
+      const halfW = (cam.right - cam.left) / 2;
+      const halfH = (cam.top - cam.bottom) / 2;
+      const t = this.mapControls.target;
+      const wx = t.x + (mx * halfW) / cam.zoom;
+      const wy = t.y + (my * halfH) / cam.zoom;
+      const k = 1 - cam.zoom / next;
+      t.set(t.x + (wx - t.x) * k, t.y + (wy - t.y) * k, 0);
+      cam.position.set(t.x, t.y, 10);
+      cam.zoom = next;
+      cam.updateProjectionMatrix();
+      return;
+    }
+
+    this.endCamAnim();
+    const target = this.controls.target;
+    const offset = this.tmpDelta.subVectors(this.camera.position, target);
+    const dist = offset.length();
+    const factor = Math.exp(ev.deltaY * (pinch ? 0.011 : 0.0032));
+    const next = Math.min(
+      Math.max(dist * factor, this.controls.minDistance),
+      this.controls.maxDistance
+    );
+    if (Math.abs(next - dist) < 1e-9) return;
+
+    // punctul din lumea 3D aflat sub cursor, la adâncimea țintei curente
+    this.tmpTgt.set(mx, my, 0.5).unproject(this.camera);
+    this.tmpDir.subVectors(this.tmpTgt, this.camera.position).normalize();
+    this.tmpTgt2.copy(this.camera.position).addScaledVector(this.tmpDir, dist);
+
+    this.camera.position.copy(target).addScaledVector(offset.normalize(), next);
+
+    // deplasăm ținta spre cursor doar la apropiere, și doar parțial: complet ar
+    // face rotirea ulterioară să pară că sare
+    if (next < dist) {
+      const pull = (1 - next / dist) * 0.6;
+      target.lerp(this.tmpTgt2, Math.min(pull, 0.35));
+    }
+  };
+
   private handlePointerLeave = () => {
     this.hoverIndex = null;
     this.renderer.domElement.style.cursor = '';
@@ -1614,6 +1701,7 @@ export class GlobeEngine {
     this.renderer.domElement.removeEventListener('pointerup', this.handleClick);
     this.renderer.domElement.removeEventListener('pointermove', this.handlePointerMove);
     this.renderer.domElement.removeEventListener('pointerleave', this.handlePointerLeave);
+    this.renderer.domElement.removeEventListener('wheel', this.handleWheel);
     this.renderer.dispose();
     this.container.removeChild(this.renderer.domElement);
   }
