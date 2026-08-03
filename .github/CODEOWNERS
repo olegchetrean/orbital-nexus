@@ -1,0 +1,5 @@
+# Code owners for Orbital Nexus.
+# Any change to CI/CD requires an explicit review from the owner
+# (anti-tampering: a malicious workflow cannot slip in unreviewed).
+
+/.github/workflows/   @olegchetrean
