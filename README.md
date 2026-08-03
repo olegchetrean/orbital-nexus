@@ -14,9 +14,18 @@ npm run verify:sources   # testează sursele de date și validează propagarea
 
 ## Ce face
 
-**Două proiecții, aceleași date** — glob 3D sau hartă plată, comutabile din antet.
-Harta e vederea în stil FlightRadar24: toată lumea deodată, cu terminatorul zi/noapte
-calculat din poziția reală a Soarelui.
+**Trei puncte de vedere, aceleași date** — glob 3D, hartă plată sau cerul de
+deasupra ta, comutabile din antet. Harta e vederea în stil FlightRadar24: toată
+lumea deodată, cu terminatorul zi/noapte calculat din poziția reală a Soarelui.
+
+**Mod Cer** — ridici telefonul și vezi ce trece pe deasupra. Giroscopul și busola
+telefonului mișcă imaginea odată cu tine, iar dacă ai un obiect selectat, o săgeată
+îți spune încotro să te întorci și cu cât să ridici telefonul, în grade. Ca să ai
+un reper că imaginea chiar corespunde cerului, desenăm și cerul real: 2.061 de stele
+până la magnitudinea 5,2 și figurile celor 89 de constelații, plus Luna și Soarele.
+Dacă Ursa Mare de pe ecran cade peste Ursa Mare de pe cer, atunci și satelitul e
+acolo unde arată. Pe desktop, sau când telefonul nu raportează nordul, privirea se
+mișcă cu degetul și busola se poate regla manual.
 
 **Glob 3D** — Pământ zi/noapte cu terminator real, atmosferă, ~12.000 de obiecte
 propagate continuu, dâre pe direcția de mers, orbita completă a obiectului selectat.
@@ -31,9 +40,9 @@ urmărire pornită automat.
 **Fișa obiectului** — ce e (satelit, etaj de rachetă, fragment), cine l-a lansat,
 când, de unde, ce secțiune radar are, dacă mai e operațional. Din catalogul SATCAT.
 
-**Mod Observator** — alegi o locație (GPS sau coordonate) și vezi ce e deasupra
-orizontului chiar acum, plus care dintre ele sunt luminate de Soare și deci
-observabile cu ochiul liber.
+**Mod Observator** — alegi o locație (GPS, coordonate, sau click direct pe glob ori
+pe hartă) și vezi ce e deasupra orizontului chiar acum, plus care dintre ele sunt
+luminate de Soare și deci observabile cu ochiul liber.
 
 **Predicție de treceri** — pentru următoarele 24 de ore: când răsare, unde ajunge
 la maxim, când apune, cât durează și cât de luminos va fi. Apeși o trecere și
@@ -150,3 +159,8 @@ niciodată deasupra latitudinii observatorului.
 Date orbitale: [CelesTrak](https://celestrak.org), pe baza catalogului US Space
 Force. Efemeride suplimentare: operatorii constelațiilor. Politica de utilizare
 CelesTrak cere atribuire și interzice redistribuirea în masă.
+
+Stelele și figurile constelațiilor din modul Cer:
+[d3-celestial](https://github.com/ofrohn/d3-celestial) (Olaf Frohn, BSD-2-Clause),
+cu poziții din catalogul Hipparcos și figuri după convenția IAU. Catalogul local se
+regenerează cu `node scripts/build-sky-catalog.mjs`.

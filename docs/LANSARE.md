@@ -122,25 +122,29 @@ Toate detaliile de mai jos sunt din conversația care a pornit proiectul — nu 
 inventat: chiar vă uitați la sateliți, chiar ai explicat legăturile laser dintre ei
 („o plasă peste planetă"), iar Lili chiar a cerut „o hartă în timp real".
 
-**Lungime:** 858 caractere. Scurt intenționat — o poveste personală nu are nevoie de
+**Lungime:** 1.089 caractere. Scurt intenționat — o poveste personală nu are nevoie de
 1.800 de caractere ca să fie citită.
-**Link:** tot în primul comentariu.
-**Video:** același material de 15 s.
+**Link:** în textul postării, plus repetat în primul comentariu.
+**Tag:** `@Lilia Chetrean` — scrie `@` și **alege-o din listă**, altfel rămâne text simplu
+și nu primește notificare.
+**Video:** materialul de 15 s din `~/Desktop/orbital-nexus-video/`.
 
 ```
 Mă pasionează cosmosul de mult.
 
-Acum câteva seri stăteam afară cu Lili Chetrean și ne uitam la sateliți. Treceau unul după altul, în șiruri. I-am explicat cum se leagă între ei prin laser, cum formează un fel de plasă peste planetă.
+Acum câteva seri stăteam afară cu @Lilia Chetrean și ne uitam la sateliți. Treceau unul după altul, în șiruri. I-am explicat cum se leagă între ei prin laser, cum formează un fel de plasă peste planetă.
 
 Ea a întrebat: și nu s-ar putea o hartă în timp real?
 
-Asta e harta.
+Asta e harta: https://www.megapromoting.com/satelit/
 
-Se numește Orbital Nexus. Se deschide în browser, fără cont și fără instalare. Are 11.894 de obiecte, propagate chiar în browserul tău. Dai click pe oricare și vezi cine l-a lansat, când, de unde și la ce altitudine e acum.
+Se numește Orbital Nexus. Se deschide în browser, fără cont și fără instalare. Are 11.894 de obiecte, propagate chiar în browserul tău.
 
-Și, pentru că de la asta a pornit tot: îți alegi locul pe hartă, iar aplicația îți spune ce treceri se văd cu ochiul liber în următoarele 24 de ore. La ce oră și în ce parte a cerului să te uiți.
+Dar partea la care țin cel mai mult e alta: ridici telefonul spre cer și platforma îți arată exact ce trece pe deasupra ta. Se mișcă odată cu tine, are stelele și constelațiile reale ca reper, iar dacă alegi un satelit anume îți spune încotro să te întorci și cu cât să ridici telefonul. Ca să nu mai stai să ghicești care punct care e.
 
-E gratuit și open source. Link în primul comentariu.
+Îți spune și ce treceri se văd cu ochiul liber la noapte, la ce oră și în ce parte a cerului.
+
+E gratuit și open source.
 ```
 
 **Primul comentariu:**
@@ -156,17 +160,19 @@ Codul e aici, dacă vrea cineva să se uite: https://github.com/olegchetrean/orb
 ```
 I have been into space for a long time.
 
-A few evenings ago I was outside with Lili Chetrean, watching satellites go over. They came one after another, in lines. I explained how they link to each other with lasers, how they form a kind of net across the planet.
+A few evenings ago I was outside with @Lilia Chetrean, watching satellites go over. They came one after another, in lines. I explained how they link to each other with lasers, how they form a kind of net across the planet.
 
 She asked: could you not make a real-time map of this?
 
-This is the map.
+Here is the map: https://www.megapromoting.com/satelit/
 
-It is called Orbital Nexus. It opens in a browser, no account, no install. 11,894 objects, propagated in your own browser. Click any one of them and you see who launched it, when, from where, and how high it is right now.
+It is called Orbital Nexus. It opens in a browser, no account, no install. 11,894 objects, propagated in your own browser.
 
-And because this is where it started: you pick your spot on the map and it tells you which passes are visible to the naked eye in the next 24 hours. What time, and where in the sky to look.
+But the part I care about most is this: you hold your phone up to the sky and it shows you exactly what is passing over you. It moves as you move, with the real stars and constellations as your reference, and if you pick a particular satellite it tells you which way to turn and how far to raise the phone. So you stop guessing which dot is which.
 
-Free and open source. Link in the first comment.
+It also tells you which passes are visible to the naked eye tonight, at what time and where in the sky to look.
+
+Free and open source.
 ```
 
 **First comment:**
@@ -176,6 +182,11 @@ https://www.megapromoting.com/satelit/
 
 Code, if anyone wants a look: https://github.com/olegchetrean/orbital-nexus
 ```
+
+> LinkedIn scade uneori reach-ul postărilor cu link în text. Compensarea: linkul e
+> într-un rând scurt, în mijloc, nu în prima linie, iar videoul rămâne conținutul
+> principal al postării. Dacă vrei reach maxim și accepți un click în plus, scoate
+> linkul din text și lasă-l doar în primul comentariu.
 
 **Care variantă când:**
 - **1b (asta)** pe profilul personal, ca lansare. Oamenii dau share la povești, nu la bug-uri.

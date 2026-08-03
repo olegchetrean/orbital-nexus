@@ -188,6 +188,7 @@ export function InfoPanel({
   onToggleFootprint,
   onToggleTracking,
   onShowPasses,
+  onFindInSky,
   onClose,
 }: {
   entry: SatelliteEntry | null;
@@ -201,6 +202,7 @@ export function InfoPanel({
   onToggleFootprint: () => void;
   onToggleTracking: () => void;
   onShowPasses?: () => void;
+  onFindInSky?: () => void;
   onClose: () => void;
 }) {
   const { t, lang, num } = useI18n();
@@ -266,6 +268,14 @@ export function InfoPanel({
             </button>
           )}
         </div>
+        {onFindInSky && (
+          <button
+            onClick={onFindInSky}
+            className="mt-2 w-full rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-400/20"
+          >
+            {t('skyFindInSky')}
+          </button>
+        )}
 
         {/* Identitatea obiectului — TLE-ul spune unde e, SATCAT spune ce e */}
         {satcat && (

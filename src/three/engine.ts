@@ -335,6 +335,16 @@ export class GlobeEngine {
     this.renderer.domElement.style.cursor = on ? 'crosshair' : '';
   }
 
+  /**
+   * În modul Cer globul e acoperit complet, deci nu are rost să-l desenăm.
+   * Continuăm însă să cerem poziții de la worker: la ieșire, scena trebuie să
+   * fie deja actualizată, nu să sară cu câteva minute.
+   */
+  setRenderEnabled(on: boolean) {
+    this.renderEnabled = on;
+  }
+  private renderEnabled = true;
+
   constructor(container: HTMLElement) {
     this.container = container;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -423,7 +433,6 @@ export class GlobeEngine {
     };
     this.mapControls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
     this.mapControls.enableZoom = false; // ca pe glob, zoom-ul e al nostru
-    this.mapControls.enableZoom = false; // la fel ca pe glob, zoom-ul e al nostru
     this.mapControls.enabled = false;
 
     this.mapGroup.visible = false;
@@ -1365,7 +1374,7 @@ export class GlobeEngine {
         }
         this.satMat.uniforms.orthoScale.value = 0.55 + this.mapCamera.zoom * 0.22;
         this.mapControls.update();
-        this.renderer.render(this.scene, this.mapCamera);
+        if (this.renderEnabled) this.renderer.render(this.scene, this.mapCamera);
         return;
       }
 
@@ -1469,7 +1478,7 @@ export class GlobeEngine {
       this.controls.update();
     }
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.renderEnabled) this.renderer.render(this.scene, this.camera);
   }
 
   private downX = 0;
@@ -1744,6 +1753,54 @@ export class GlobeEngine {
     const target = new THREE.Vector3(pos[index * 3], pos[index * 3 + 1], pos[index * 3 + 2]);
     this.controls.minDistance = SAT_MIN_DIST;
     this.startCamAnim(target, index, SAT_VIEW_DIST);
+  }
+
+  /**
+   * Cameră de ansamblu, fără animație: unde privește pe glob (longitudine și
+   * latitudine, radiani) și de la ce distanță, în raze terestre.
+   */
+  placeCameraGlobe(lonRad: number, latRad: number, dist: number) {
+    this.endCamAnim();
+    this.controls.minDistance = EARTH_MIN_DIST;
+    this.controls.target.set(0, 0, 0);
+    this.camera.position.set(
+      Math.cos(latRad) * Math.sin(lonRad) * dist,
+      Math.sin(latRad) * dist,
+      Math.cos(latRad) * Math.cos(lonRad) * dist
+    );
+    this.camera.lookAt(0, 0, 0);
+  }
+
+  /**
+   * Așază camera în jurul unui obiect, fără animație: distanța în raze terestre,
+   * plus un ocol față de direcția radială. Un unghi lateral (azimut ≠ 0) ține
+   * limbul luminat al Pământului în spatele obiectului — radial, în dreptul
+   * obiectului rămâne doar discul negru al planetei.
+   */
+  placeCameraAround(index: number, dist: number, azRad: number, elRad: number) {
+    if (!this.store || !this.store.valid[index]) return;
+    this.endCamAnim();
+    const pos = this.hasSnap ? this.renderPos : this.store.positions;
+    const target = this.tmpTgt.set(pos[index * 3], pos[index * 3 + 1], pos[index * 3 + 2]);
+    const radial = this.tmpDir.copy(target).normalize();
+
+    // bază locală: radial + două direcții perpendiculare pe el
+    const up = this.tmpDir2.set(0, 1, 0);
+    if (Math.abs(up.dot(radial)) > 0.95) up.set(1, 0, 0);
+    const east = this.tmpV.copy(up).cross(radial).normalize();
+    const north = up.copy(radial).cross(east).normalize();
+
+    const dir = this.tmpDelta
+      .copy(radial)
+      .multiplyScalar(Math.cos(azRad) * Math.cos(elRad))
+      .addScaledVector(east, Math.sin(azRad) * Math.cos(elRad))
+      .addScaledVector(north, Math.sin(elRad))
+      .normalize();
+
+    this.controls.minDistance = SAT_MIN_DIST;
+    this.controls.target.copy(target);
+    this.camera.position.copy(target).addScaledVector(dir, dist);
+    this.camera.lookAt(target);
   }
 
   /** Revenire la vederea de ansamblu, cu limitele de zoom repuse pe glob */
