@@ -1,8 +1,11 @@
 # Materiale de lansare — Orbital Nexus
 
 **Produs:** hartă 3D a sateliților în timp real, rulează integral în browser, fără backend.
-**Live:** https://satelit.megapromoting.com — **încă nu rezolvă în DNS (NXDOMAIN, verificat
-azi) și nu are HTTPS.** Vezi „Ziua 0" în secțiunea 6. Nimic nu se publică până nu e rezolvat.
+**Live:** https://www.megapromoting.com/satelit/ — **funcțional, HTTPS, verificat.**
+**Link viitor:** https://satelit.megapromoting.com — vhost gata, așteaptă înregistrarea DNS A
+la Hostinger. Când propagă, subcalea devine redirecționare 301 și linkurile deja distribuite
+continuă să meargă. Până atunci, folosește peste tot adresa cu subcale de mai sus.
+X numără orice link ca 23 de caractere, deci totalurile din secțiunea 3 rămân valabile.
 **Cod:** https://github.com/olegchetrean/orbital-nexus (MIT, public, verificat)
 **Autor:** Oleg Chetrean, MEGA PROMOTING S.R.L., Chișinău
 
@@ -87,7 +90,7 @@ Câte fallback-uri tăcute aveți în producție chiar acum?
 **Primul comentariu (îl publici tu, la 30-60 secunde după post):**
 
 ```
-Live, fără cont și fără instalare: https://satelit.megapromoting.com
+Live, fără cont și fără instalare: https://www.megapromoting.com/satelit/
 Cod și documentația surselor de date: https://github.com/olegchetrean/orbital-nexus
 
 Documentul despre surse (docs/SURSE-DE-DATE.md) are toate verificările HTTP reale, inclusiv sursele pe care le-am respins și de ce.
@@ -155,7 +158,7 @@ How many silent fallbacks are running in your production right now?
 **Primul comentariu:**
 
 ```
-Live, no account, no install: https://satelit.megapromoting.com
+Live, no account, no install: https://www.megapromoting.com/satelit/
 Source and the data-source writeup: https://github.com/olegchetrean/orbital-nexus
 
 The sources document lists every HTTP check I ran, including the sources I rejected and why.
@@ -171,13 +174,13 @@ dinainte. Cifrele de mai jos sunt: text singur, apoi total cu link.
 ### RO — 246 caractere text, 270 cu link
 
 ```
-CelesTrak semnalează „nemodificat" cu HTTP 403, nu cu 304. Într-un Promise.all, un singur 403 îmi ștergea catalogul de 11.894 de sateliți, iar aplicația cădea tăcut pe 238 de TLE-uri hardcodate. Interfața zicea „live". Orbital Nexus, open source: https://satelit.megapromoting.com
+CelesTrak semnalează „nemodificat" cu HTTP 403, nu cu 304. Într-un Promise.all, un singur 403 îmi ștergea catalogul de 11.894 de sateliți, iar aplicația cădea tăcut pe 238 de TLE-uri hardcodate. Interfața zicea „live". Orbital Nexus, open source: https://www.megapromoting.com/satelit/
 ```
 
 ### EN — 237 caractere text, 261 cu link
 
 ```
-CelesTrak signals "not modified" with HTTP 403, not 304. Inside a Promise.all, one 403 wiped my 11,894-object catalog and the app silently fell back to 238 hardcoded TLEs. The UI still said "live". Orbital Nexus, open source, no backend: https://satelit.megapromoting.com
+CelesTrak signals "not modified" with HTTP 403, not 304. Inside a Promise.all, one 403 wiped my 11,894-object catalog and the app silently fell back to 238 hardcoded TLEs. The UI still said "live". Orbital Nexus, open source, no backend: https://www.megapromoting.com/satelit/
 ```
 
 **Reply pe firul tău (la ambele), ca să încapă restul fără să tai din hook:**
@@ -230,7 +233,7 @@ raportată de comunitate, nu confirmată în documentația oficială; ambele tit
 sus stau confortabil sub ea.
 
 **Formular:** https://news.ycombinator.com/submit
-**URL de trimis:** https://satelit.megapromoting.com
+**URL de trimis:** https://www.megapromoting.com/satelit/
 
 Trimiți aplicația, nu repo-ul. Regula lor spune că trebuie să existe o cale prin care
 oamenii pot încerca lucrul, iar ghidul cere explicit să fie ușor de încercat, fără
@@ -619,7 +622,7 @@ Astea nu sunt sugestii de îmbunătățire. Fără ele, lansarea nu poate porni.
    limba browserului și cade pe engleză pentru vizitatorii străini (`detectLang()` în
    `src/lib/i18n.ts`), dar titlul din tab și din previzualizarea link-ului rămâne românesc
    până rulează JS. Pentru un public internațional, fă titlul bilingv sau neutru.
-   Alternativa rapidă: trimite `https://satelit.megapromoting.com/?lang=en` pe canalele EN,
+   Alternativa rapidă: trimite `https://www.megapromoting.com/satelit//?lang=en` pe canalele EN,
    parametrul e deja suportat.
 4. **Verifică `npm run verify:sources` pe producție** înainte de a spune public „live".
    Dacă vreo sursă e picată în ziua lansării, mai bine afli tu decât primul comentator.
