@@ -113,7 +113,79 @@ resetează distribuția).
 
 ---
 
-## 2. Post LinkedIn — engleză
+## 1b. Post LinkedIn — varianta umană (recomandată pentru profilul personal)
+
+Varianta de la punctul 1 e un post-mortem tehnic: bun pentru Hacker News și pentru
+developeri, dar rece pentru un profil personal. Asta e povestea reală, spusă simplu.
+
+Toate detaliile de mai jos sunt din conversația care a pornit proiectul — nu e nimic
+inventat: chiar vă uitați la sateliți, chiar ai explicat legăturile laser dintre ei
+(„o plasă peste planetă"), iar Lili chiar a cerut „o hartă în timp real".
+
+**Lungime:** 858 caractere. Scurt intenționat — o poveste personală nu are nevoie de
+1.800 de caractere ca să fie citită.
+**Link:** tot în primul comentariu.
+**Video:** același material de 15 s.
+
+```
+Mă pasionează cosmosul de mult.
+
+Acum câteva seri stăteam afară cu Lili Chetrean și ne uitam la sateliți. Treceau unul după altul, în șiruri. I-am explicat cum se leagă între ei prin laser, cum formează un fel de plasă peste planetă.
+
+Ea a întrebat: și nu s-ar putea o hartă în timp real?
+
+Asta e harta.
+
+Se numește Orbital Nexus. Se deschide în browser, fără cont și fără instalare. Are 11.894 de obiecte, propagate chiar în browserul tău. Dai click pe oricare și vezi cine l-a lansat, când, de unde și la ce altitudine e acum.
+
+Și, pentru că de la asta a pornit tot: îți alegi locul pe hartă, iar aplicația îți spune ce treceri se văd cu ochiul liber în următoarele 24 de ore. La ce oră și în ce parte a cerului să te uiți.
+
+E gratuit și open source. Link în primul comentariu.
+```
+
+**Primul comentariu:**
+
+```
+https://www.megapromoting.com/satelit/
+
+Codul e aici, dacă vrea cineva să se uite: https://github.com/olegchetrean/orbital-nexus
+```
+
+### Varianta engleză
+
+```
+I have been into space for a long time.
+
+A few evenings ago I was outside with Lili Chetrean, watching satellites go over. They came one after another, in lines. I explained how they link to each other with lasers, how they form a kind of net across the planet.
+
+She asked: could you not make a real-time map of this?
+
+This is the map.
+
+It is called Orbital Nexus. It opens in a browser, no account, no install. 11,894 objects, propagated in your own browser. Click any one of them and you see who launched it, when, from where, and how high it is right now.
+
+And because this is where it started: you pick your spot on the map and it tells you which passes are visible to the naked eye in the next 24 hours. What time, and where in the sky to look.
+
+Free and open source. Link in the first comment.
+```
+
+**First comment:**
+
+```
+https://www.megapromoting.com/satelit/
+
+Code, if anyone wants a look: https://github.com/olegchetrean/orbital-nexus
+```
+
+**Care variantă când:**
+- **1b (asta)** pe profilul personal, ca lansare. Oamenii dau share la povești, nu la bug-uri.
+- **1 (post-mortem-ul tehnic)** peste o săptămână, ca urmare, sau direct pe Hacker News
+  și în subredituri de developeri. Sunt două audiențe diferite, nu concurează.
+
+
+---
+
+## 2. Post LinkedIn — engleză (varianta tehnică)
 
 Nu e traducerea celui de sus. Publicul e alt: developeri internaționali care nu au auzit
 de tine și pentru care „Moldova" nu e context, ci detaliu. Am scos orice referință locală
