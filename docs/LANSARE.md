@@ -527,7 +527,74 @@ Folosește textul de pe X, varianta EN.
   cere cod de invitație, iar ruta oficială e un email la invites@tildes.net, fără program.
   Public mic, poartă închisă, zero cale rapidă. **Potrivire MICĂ**, nu merită pentru lansare.
 
-<!-- SECTION-5-REDDIT-ASTRO -->
+### 5.10 Reddit — reguli citite direct din widget-ul fiecărui subreddit
+
+Reddit blochează majoritatea instrumentelor automate: `www.reddit.com` și toate rutele
+`.json` întorc o pagină de verificare anti-bot. Ruta care funcționează e
+`https://old.reddit.com/r/<nume>/about/rules/` (cu slash final) — de acolo vine fiecare
+citat de mai jos. Numărul de abonați e din surse terțe (GummySearch, FreeSubStats,
+2–3 august 2026), deci aproximativ. Unde widget-ul de reguli e gol, scrie asta explicit,
+nu am completat cu presupuneri.
+
+**Atenție transversală:** contul care postează trebuie să aibă istoric. Repo-ul are zero
+stele și o zi de existență; r/opensource și r/InternetIsBeautiful verifică amândouă
+activitatea recentă a contului și elimină postările de tip „drive-by".
+
+#### Potrivire mare
+
+| Subreddit | Abonați | Ce contează |
+|---|---|---|
+| **r/amateursatellites** | 36k | **Cea mai bună țintă.** Patru reguli, niciuna împotriva autopromovării. Regula 1 cere flair — există **Software**. Precedent direct: *„I built an open-source 3D satellite tracker (satlas.app)"*, 24 mai 2026. |
+| **r/opensource** | 373k | Regula 8: flair **Promotional** obligatoriu. Regula 4: licență OSI — MIT trece. Regula 6 elimină postările fără intenție de discuție, deci rămâi în comentarii. |
+| **r/webdev** | 3,29M | **Doar sâmbăta**, flair **Showoff Saturday**. Regula 4 interzice *„any commercial promotion"* — un link către `megapromoting.com` poate fi citit ca reclamă. Aici dă GitHub. |
+| **r/coolgithubprojects** | 112k | Fără reguli configurate. Sidebar cere format `[Desc] - [Title]` și link GitHub, nu demo. |
+| **r/satellites** | 19k | Două reguli, ambele banale. Canonic e cu literă mică — **r/satellite, la singular, e privat** (HTTP 403). |
+| **r/threejs** | ~52k | Widget de reguli **complet gol**. Sidebar invită demo-uri. |
+
+#### Potrivire medie
+
+- **r/space** (27,9M) — nicio regulă contra autopromovării, iar precedentul e clar:
+  *„So I built yet another satellite tracker (with pass predictions)"* (21 apr. 2026),
+  *„I made a website to visualize satellites and the solar system to scale"* (16 iun. 2026).
+  Titlul acela cu „yet another" spune totuși cât de saturată e nișa. Imaginile doar în
+  weekend (regula 7), maximum 5 postări/24 h (regula 12), conținut generat de AI interzis (13).
+- **r/InternetIsBeautiful** (16,6M) — trece filtrele dure (gratuit, fără cont, fără descărcare),
+  dar **regula 2** elimină site-urile *„care fac lucruri foarte similare cu submisii anterioare"*,
+  iar trackere de sateliți au mai fost postate în 2017, 2020 și 2022. Regula 11 impune raport
+  strict 90/10 pe istoricul recent.
+- **r/javascript** (2,45M) — regula 2 cere cod public alături de demo; repo-ul rezolvă asta.
+  Flair „Showoff Saturday" există și e folosit, dar nicio regulă nu-l impune — **neverificat**
+  dacă moderatorii îl cer informal.
+- **r/spaceflight** (~312k) — regula 4: *„toleranță scăzută pentru autopromovare flagrantă"*.
+  O postare bine formulată e apărabilă, o campanie nu.
+- **r/SideProject** (797k) — fără reguli, format `[Nume] - [Descriere]`, volum uriaș, semnal mic.
+- **r/webgl** (~10k) — fără reguli, mic, risc zero.
+
+#### De evitat
+
+- **r/programming** (6,9M) — regula 5 e fatală: *„just a link to a GitHub page or a list of
+  features is not [allowed]. We don't care what you built, we care how you build it."*
+  Viabil doar ca articol tehnic real — propagarea SGP4 în browser ar fi un unghi legitim.
+- **r/Astronomy** (3,1M) — regula 5 interzice explicit aplicațiile.
+- **r/astrophotography** (2,64M) — regula 1: *„No self-promotion."* Sub doar de imagini.
+- **r/dataisbeautiful** (21,8M) — formatul cere ca postarea să *fie* vizualizarea, nu un link.
+- **r/selfhosted** (811k) — pică de două ori: aplicația nu se auto-găzduiește (fără backend),
+  iar regula 6 trimite proiectele mai noi de 3 luni în megathread.
+- **r/orbitalmechanics** — mort, fără postări din februarie 2022.
+
+#### Ordinea recomandată pe Reddit
+
+r/amateursatellites (flair Software) → r/satellites → r/opensource (flair Promotional) →
+sâmbăta următoare r/webdev (flair Showoff Saturday) → r/space.
+
+**Distanțează-le.** r/InternetIsBeautiful și r/opensource verifică amândouă istoricul recent
+al contului; o rafală pe zece subredituri în aceeași zi e tiparul cel mai sigur de a fi marcat
+ca spam.
+
+#### Necercetate
+r/nasa (5,9M), r/RTLSDR (136k), r/amateurradio (219k) — ultimele două se suprapun puternic
+cu publicul de la r/amateursatellites. Piste, nu recomandări: verifică regulile înainte.
+
 
 ---
 
